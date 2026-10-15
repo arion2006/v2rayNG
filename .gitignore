@@ -33,8 +33,8 @@ signing.properties
 
 # Ignore shared object files
 *.so
-# Except the prebuilt naiveproxy binary (required at runtime, not a build artifact)
-!V2rayNG/app/src/main/jniLibs/arm64-v8a/libnaive.so
+# Note: V2rayNG/app/libs/arm64-v8a/libnaive.so is force-added (git add -f)
+# as it is a required prebuilt binary, not a build artifact.
 
 # Ignore Google services JSON
 V2rayNG/app/google-services.json
