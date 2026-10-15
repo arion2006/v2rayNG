@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">Thêm [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">Thêm [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">Thêm [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">Thêm [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">Thêm [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">Bạn có chắc muốn xóa tất cả cấu hình đang hiển thị không?</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">Mật khẩu</string>
     <string name="server_lab_security3">Thuật toán mã hóa</string>
     <string name="server_lab_id4">Mật khẩu (Không bắt buộc)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">Tên người dùng (Không bắt buộc)</string>
     <string name="server_lab_encryption">Mã hóa</string>
     <string name="server_lab_flow">Kiểm soát lưu lượng (flow)</string>

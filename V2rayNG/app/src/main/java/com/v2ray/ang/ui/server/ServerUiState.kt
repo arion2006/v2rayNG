@@ -139,7 +139,7 @@ class ServerUiState(
                 else -> null
             },
             flow = if (isVless) flow else null,
-            username = if (isSocksOrHttp) username else null,
+            username = if (isSocksOrHttp || configType == EConfigType.NAIVE) username else null,
             secretKey = if (isWireguard) secretKey else null,
             publicKey = when {
                 isWireguard -> publicKey

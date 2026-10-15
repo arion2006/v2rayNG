@@ -213,6 +213,7 @@ object AppConfig {
     const val HTTP = "http://"
     const val VLESS = "vless://"
     const val TROJAN = "trojan://"
+    const val NAIVE = "naive+https://"
     const val WIREGUARD = "wireguard://"
     const val TUIC = "tuic://"
     const val HYSTERIA = "hysteria://"

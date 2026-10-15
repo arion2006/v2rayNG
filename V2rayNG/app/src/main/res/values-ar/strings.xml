@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">إضافة [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">إضافة [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">إضافة [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">إضافة [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">إضافة [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">هل أنت متأكد من أنك تريد حذف جميع ملفات التعريف المعروضة حاليًا؟</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">كلمة المرور</string>
     <string name="server_lab_security3">الأمان</string>
     <string name="server_lab_id4">كلمة المرور (اختياري)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">المستخدم (اختياري)</string>
     <string name="server_lab_encryption">التشفير</string>
     <string name="server_lab_flow">التدفق (flow)</string>

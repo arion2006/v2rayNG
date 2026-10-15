@@ -29,6 +29,7 @@ object CoreOutboundBuilder {
             EConfigType.SOCKS -> toOutboundSocks(profileItem)
             EConfigType.VLESS -> toOutboundVless(profileItem)
             EConfigType.TROJAN -> toOutboundTrojan(profileItem)
+            EConfigType.NAIVE -> toOutboundNaive(profileItem)
             EConfigType.WIREGUARD -> toOutboundWireguard(profileItem)
             EConfigType.HYSTERIA2 -> toOutboundHysteria2(profileItem)
             EConfigType.HTTP -> toOutboundHttp(profileItem)
@@ -214,6 +215,34 @@ object CoreOutboundBuilder {
                 settings.user = profileItem.username.orEmpty()
                 settings.pass = profileItem.password.orEmpty()
             }
+        }
+
+        return outboundBean
+    }
+
+    /**
+     * Builds the Xray socks outbound for a Naive server. The traffic goes through the
+     * local naiveproxy process (see NaiveProcessManager), so this always points at
+     * 127.0.0.1:<naive local port>. Returns null when naive is not running, which
+     * makes config generation fail instead of producing a broken config.
+     */
+    private fun toOutboundNaive(profileItem: ProfileItem): OutboundBean? {
+        val naivePort = NaiveProcessManager.currentPort
+        if (naivePort <= 0) {
+            LogUtil.e(AppConfig.TAG, "Naive outbound: naive process is not running")
+            return null
+        }
+
+        val outboundBean = OutboundBean(
+            protocol = "socks",
+            settings = OutboundBean.OutSettingsBean(),
+            streamSettings = OutboundBean.StreamSettingsBean()
+        )
+
+        outboundBean.settings?.let { settings ->
+            settings.address = "127.0.0.1"
+            settings.port = naivePort
+            settings.level = AppConfig.DEFAULT_LEVEL
         }
 
         return outboundBean

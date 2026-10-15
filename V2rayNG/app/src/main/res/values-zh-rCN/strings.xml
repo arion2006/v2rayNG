@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">添加 [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">添加 [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">添加 [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">添加 [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">添加 [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">添加 [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">确定要删除当前显示的所有配置吗？</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">密码</string>
     <string name="server_lab_security3">加密方式</string>
     <string name="server_lab_id4">密码 (可选)</string>
+    <string name="server_lab_naive_user">用户名</string>
+    <string name="server_lab_naive_password">密码</string>
     <string name="server_lab_security4">用户名 (可选)</string>
     <string name="server_lab_encryption">加密方式 (encryption)</string>
     <string name="server_lab_flow">流控 (flow)</string>

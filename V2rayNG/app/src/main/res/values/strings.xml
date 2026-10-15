@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">Add [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">Add [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">Add [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">Add [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">Add [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">Are you sure you want to delete all profiles currently shown?</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">password</string>
     <string name="server_lab_security3">security</string>
     <string name="server_lab_id4">Password (optional)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">User (optional)</string>
     <string name="server_lab_encryption">encryption</string>
     <string name="server_lab_flow">flow</string>

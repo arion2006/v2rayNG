@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">ٱووردن [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">ٱووردن [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">ٱووردن [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">ٱووردن [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">ٱووردن [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">پوی کانفیگا ک هیم سکو نشووݩ داڌه ابۊن پاک ابۊن، هنی هم اخۊی پاکسووݩ کۊنی؟</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">رزم</string>
     <string name="server_lab_security3">ٱمنیت</string>
     <string name="server_lab_id4">رزم (اختیاری)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">نوم منتوری (اختیاری)</string>
     <string name="server_lab_encryption">رزم نگاری</string>
     <string name="server_lab_flow">جریان (flow)</string>

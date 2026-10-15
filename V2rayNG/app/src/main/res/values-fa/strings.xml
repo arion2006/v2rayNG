@@ -43,6 +43,7 @@
     <string name="menu_item_import_config_manually_socks">افزودن [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">افزودن [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">افزودن [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">افزودن [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">افزودن [Hysteria2]</string>
     <string name="confirm_delete_visible_profiles">آیا مطمئن هستید که می‌خواهید همه پروفایل‌های نمایش‌داده‌شده را حذف کنید؟</string>
@@ -91,6 +92,8 @@
     <string name="server_lab_id3">رمز عبور</string>
     <string name="server_lab_security3">امنیت</string>
     <string name="server_lab_id4">رمز عبور (اختیاری)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">نام‌ کاربری (اختیاری)</string>
     <string name="server_lab_encryption">رمزنگاری</string>
     <string name="server_lab_flow">حالت جریان (flow)</string>
