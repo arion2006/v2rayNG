@@ -88,7 +88,8 @@ jobs:
         DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
       run: |
         mkdir -p "$HOME/.android"
-        echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+        echo "$DEBUG_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$HOME/.android/debug.keystore"
+        echo "11ae7fdbe90a1ee419b56e66f646db9fa1cf1829631368f2a825a4f133381cc5  $HOME/.android/debug.keystore" | sha256sum -c -
 
     - name: Build Debug APK
       run: |
