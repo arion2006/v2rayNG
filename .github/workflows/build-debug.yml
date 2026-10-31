@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - naive-support
+      - ui-rebrand
   workflow_dispatch:
 
 permissions:
