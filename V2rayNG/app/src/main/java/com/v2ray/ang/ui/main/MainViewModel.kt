@@ -95,6 +95,9 @@ class MainViewModel(
     private val _sessionTraffic = MutableStateFlow<SessionTraffic?>(null)
     val sessionTraffic: StateFlow<SessionTraffic?> = _sessionTraffic.asStateFlow()
 
+    private val _speedHistory = MutableStateFlow<List<SpeedSample>>(emptyList())
+    val speedHistory: StateFlow<List<SpeedSample>> = _speedHistory.asStateFlow()
+
     private var sessionTrafficJob: Job? = null
 
     // ---------- Keyword filtering ----------
@@ -240,13 +243,19 @@ class MainViewModel(
                     baselineProxyUplink = proxyUplink
                     baselineProxyDownlink = proxyDownlink
                     _sessionTraffic.update { SessionTraffic(0.0, 0.0, 0L, 0L) }
+                    _speedHistory.update { appendSpeedSample(it, SpeedSample(0.0, 0.0)) }
                 } else {
-                    _sessionTraffic.update {
-                        SessionTraffic(
-                            upSpeedBytesPerSec = (proxyUplink - prevProxyUplink) / sinceLastQueryInSeconds,
-                            downSpeedBytesPerSec = (proxyDownlink - prevProxyDownlink) / sinceLastQueryInSeconds,
-                            sessionUpBytes = proxyUplink - baselineProxyUplink,
-                            sessionDownBytes = proxyDownlink - baselineProxyDownlink
+                    val traffic = SessionTraffic(
+                        upSpeedBytesPerSec = (proxyUplink - prevProxyUplink) / sinceLastQueryInSeconds,
+                        downSpeedBytesPerSec = (proxyDownlink - prevProxyDownlink) / sinceLastQueryInSeconds,
+                        sessionUpBytes = proxyUplink - baselineProxyUplink,
+                        sessionDownBytes = proxyDownlink - baselineProxyDownlink
+                    )
+                    _sessionTraffic.update { traffic }
+                    _speedHistory.update {
+                        appendSpeedSample(
+                            it,
+                            SpeedSample(traffic.upSpeedBytesPerSec, traffic.downSpeedBytesPerSec)
                         )
                     }
                 }
@@ -262,6 +271,7 @@ class MainViewModel(
         sessionTrafficJob?.cancel()
         sessionTrafficJob = null
         _sessionTraffic.value = null
+        _speedHistory.value = emptyList()
     }
 
     private fun queueTestResult(result: RealPingResult, request: MainTestRequests.Bulk) {

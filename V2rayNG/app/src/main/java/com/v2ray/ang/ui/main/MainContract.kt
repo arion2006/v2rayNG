@@ -41,6 +41,26 @@ data class SessionTraffic(
     val sessionDownBytes: Long
 )
 
+/** One speed measurement taken by the session traffic poller, in bytes/sec. */
+data class SpeedSample(
+    val upBytesPerSec: Double,
+    val downBytesPerSec: Double
+)
+
+/** Max samples kept for the dashboard speed chart (2 s poll interval, about 2 minutes). */
+const val SPEED_HISTORY_MAX_SAMPLES = 60
+
+/** Append [sample] to [history], keeping only the newest [maxSamples] entries. */
+fun appendSpeedSample(
+    history: List<SpeedSample>,
+    sample: SpeedSample,
+    maxSamples: Int = SPEED_HISTORY_MAX_SAMPLES
+): List<SpeedSample> {
+    if (maxSamples <= 0) return emptyList()
+    val next = history + sample
+    return if (next.size <= maxSamples) next else next.drop(next.size - maxSamples)
+}
+
 /**
  * All possible user interaction intents
  */

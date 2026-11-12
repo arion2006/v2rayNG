@@ -594,5 +594,6 @@
     <string name="dashboard_traffic_down">Down</string>
     <string name="dashboard_traffic_session_up">Session up</string>
     <string name="dashboard_traffic_session_down">Session down</string>
+    <string name="dashboard_speed_title">Speed history</string>
 
 </resources>
