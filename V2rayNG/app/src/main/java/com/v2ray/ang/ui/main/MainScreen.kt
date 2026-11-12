@@ -67,6 +67,7 @@ fun MainScreen(
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.Home) }
     val sessionTraffic by mainViewModel.sessionTraffic.collectAsStateWithLifecycle()
     val speedHistory by mainViewModel.speedHistory.collectAsStateWithLifecycle()
+    val dashboardStatus by mainViewModel.dashboardStatus.collectAsStateWithLifecycle()
     val selectedServerRemarks by remember(selectedGuid) {
         mutableStateOf(mainViewModel.getSelectedServerRemarks())
     }
@@ -243,6 +244,7 @@ fun MainScreen(
                         uiState = uiState,
                         sessionTraffic = sessionTraffic,
                         speedHistory = speedHistory,
+                        dashboardStatus = dashboardStatus,
                         selectedServerRemarks = selectedServerRemarks,
                         onAction = onAction
                     )

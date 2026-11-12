@@ -1,6 +1,10 @@
 package com.v2ray.ang.ui.main
 
+import android.app.ActivityManager
 import android.app.Application
+import android.content.Context
+import android.os.Process
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -42,6 +46,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.PatternSyntaxException
 
@@ -98,6 +104,13 @@ class MainViewModel(
     private val _speedHistory = MutableStateFlow<List<SpeedSample>>(emptyList())
     val speedHistory: StateFlow<List<SpeedSample>> = _speedHistory.asStateFlow()
 
+    // ---------- Dashboard status ----------
+    private val _dashboardStatus = MutableStateFlow(DashboardStatus())
+    val dashboardStatus: StateFlow<DashboardStatus> = _dashboardStatus.asStateFlow()
+
+    /** Elapsed-realtime stamp of when the current core run was first observed running. */
+    private var serviceStartedAtElapsedMs: Long? = null
+
     private var sessionTrafficJob: Job? = null
 
     // ---------- Keyword filtering ----------
@@ -129,6 +142,7 @@ class MainViewModel(
     init {
         collectServiceEvents()
         setupGroupTab()
+        refreshStaticStatus()
     }
 
     private fun collectServiceEvents() {
@@ -212,6 +226,9 @@ class MainViewModel(
 
     private fun startSessionTrafficPolling() {
         sessionTrafficJob?.cancel()
+        if (serviceStartedAtElapsedMs == null) {
+            serviceStartedAtElapsedMs = SystemClock.elapsedRealtime()
+        }
         sessionTrafficJob = viewModelScope.launch(Dispatchers.IO) {
             var lastQueryTime = System.currentTimeMillis()
             var lastProxyUplink: Long? = null
@@ -262,6 +279,16 @@ class MainViewModel(
                 lastProxyUplink = proxyUplink
                 lastProxyDownlink = proxyDownlink
 
+                _dashboardStatus.update {
+                    DashboardStatus(
+                        lanIp = queryLanIp(),
+                        appMemoryBytes = queryAppMemoryBytes(),
+                        coreUptimeMillis = serviceStartedAtElapsedMs?.let { startedAt ->
+                            (SystemClock.elapsedRealtime() - startedAt).coerceAtLeast(0L)
+                        }
+                    )
+                }
+
                 delay(SESSION_TRAFFIC_POLL_INTERVAL_MS)
             }
         }
@@ -272,6 +299,57 @@ class MainViewModel(
         sessionTrafficJob = null
         _sessionTraffic.value = null
         _speedHistory.value = emptyList()
+        serviceStartedAtElapsedMs = null
+        _dashboardStatus.update { it.copy(coreUptimeMillis = null) }
+    }
+
+    // ---------- Dashboard status queries ----------
+
+    private fun refreshStaticStatus() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _dashboardStatus.update {
+                it.copy(lanIp = queryLanIp(), appMemoryBytes = queryAppMemoryBytes())
+            }
+        }
+    }
+
+    /** First non-loopback IPv4 on a LAN-class interface (wlan/rmnet/eth preferred, tun/ppp skipped). */
+    private fun queryLanIp(): String? {
+        return try {
+            val addresses = NetworkInterface.getNetworkInterfaces()?.toList().orEmpty()
+                .filter { iface ->
+                    runCatching { iface.isUp && !iface.isLoopback }.getOrDefault(false)
+                }
+                .flatMap { iface ->
+                    iface.inetAddresses.toList().map { address -> iface.name to address }
+                }
+                .filter { (_, address) ->
+                    address is Inet4Address && !address.isLoopbackAddress && !address.isLinkLocalAddress
+                }
+            val preferred = addresses.firstOrNull { (name, _) ->
+                name.startsWith("wlan") || name.startsWith("rmnet") || name.startsWith("eth")
+            } ?: addresses.firstOrNull { (name, _) ->
+                !name.startsWith("tun") && !name.startsWith("ppp")
+            }
+            preferred?.second?.hostAddress
+        } catch (error: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to query LAN IP", error)
+            null
+        }
+    }
+
+    /** This process's total PSS in bytes, or null when the platform refuses to report it. */
+    private fun queryAppMemoryBytes(): Long? {
+        return try {
+            val activityManager =
+                app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return null
+            val info = activityManager.getProcessMemoryInfo(intArrayOf(Process.myPid()))
+                .firstOrNull() ?: return null
+            info.totalPss * 1024L
+        } catch (error: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to query app memory", error)
+            null
+        }
     }
 
     private fun queueTestResult(result: RealPingResult, request: MainTestRequests.Bulk) {

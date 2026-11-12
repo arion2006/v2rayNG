@@ -39,6 +39,7 @@ fun DashboardHomeTab(
     uiState: MainUiState,
     sessionTraffic: SessionTraffic?,
     speedHistory: List<SpeedSample>,
+    dashboardStatus: DashboardStatus,
     selectedServerRemarks: String?,
     onAction: (MainAction) -> Unit
 ) {
@@ -57,6 +58,49 @@ fun DashboardHomeTab(
         )
         SessionTrafficCard(sessionTraffic = sessionTraffic)
         SpeedChartCard(sessionTraffic = sessionTraffic, speedHistory = speedHistory)
+        StatusCard(dashboardStatus = dashboardStatus)
+    }
+}
+
+@Composable
+private fun StatusCard(dashboardStatus: DashboardStatus) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = stringResource(id = R.string.dashboard_status_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            dashboardStatus.lanIp?.let { ip ->
+                TrafficInfoLine(labelRes = R.string.dashboard_status_lan_ip, value = ip)
+            }
+            dashboardStatus.appMemoryBytes?.let { bytes ->
+                TrafficInfoLine(
+                    labelRes = R.string.dashboard_status_memory,
+                    value = bytes.toTrafficString()
+                )
+            }
+            dashboardStatus.coreUptimeMillis?.let { uptime ->
+                TrafficInfoLine(
+                    labelRes = R.string.dashboard_status_uptime,
+                    value = formatDurationHms(uptime)
+                )
+            }
+            if (dashboardStatus.lanIp == null &&
+                dashboardStatus.appMemoryBytes == null &&
+                dashboardStatus.coreUptimeMillis == null
+            ) {
+                Text(
+                    text = stringResource(id = R.string.value_unknown),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

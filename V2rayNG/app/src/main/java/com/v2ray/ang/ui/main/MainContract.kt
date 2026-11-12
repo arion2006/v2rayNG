@@ -41,6 +41,26 @@ data class SessionTraffic(
     val sessionDownBytes: Long
 )
 
+/** Device/app status for the dashboard status card; null fields are hidden, never invented. */
+data class DashboardStatus(
+    val lanIp: String? = null,
+    val appMemoryBytes: Long? = null,
+    val coreUptimeMillis: Long? = null
+)
+
+/** Format a duration as h:mm:ss, or m:ss when under an hour; negative input clamps to 0:00. */
+fun formatDurationHms(millis: Long): String {
+    val totalSeconds = (millis / 1000L).coerceAtLeast(0L)
+    val hours = totalSeconds / 3600L
+    val minutes = (totalSeconds % 3600L) / 60L
+    val seconds = totalSeconds % 60L
+    return if (hours > 0L) {
+        "%d:%02d:%02d".format(java.util.Locale.ROOT, hours, minutes, seconds)
+    } else {
+        "%d:%02d".format(java.util.Locale.ROOT, minutes, seconds)
+    }
+}
+
 /** One speed measurement taken by the session traffic poller, in bytes/sec. */
 data class SpeedSample(
     val upBytesPerSec: Double,

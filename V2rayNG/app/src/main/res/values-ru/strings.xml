@@ -591,5 +591,9 @@
     <string name="dashboard_traffic_session_up">Session up</string>
     <string name="dashboard_traffic_session_down">Session down</string>
     <string name="dashboard_speed_title">Speed history</string>
+    <string name="dashboard_status_title">Status</string>
+    <string name="dashboard_status_lan_ip">LAN IP</string>
+    <string name="dashboard_status_memory">App memory</string>
+    <string name="dashboard_status_uptime">Core uptime</string>
 
 </resources>

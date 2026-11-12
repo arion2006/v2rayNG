@@ -585,5 +585,9 @@
     <string name="dashboard_traffic_session_up">會話上行</string>
     <string name="dashboard_traffic_session_down">會話下行</string>
     <string name="dashboard_speed_title">速度曲線</string>
+    <string name="dashboard_status_title">狀態</string>
+    <string name="dashboard_status_lan_ip">內網 IP</string>
+    <string name="dashboard_status_memory">應用記憶體</string>
+    <string name="dashboard_status_uptime">核心運行時間</string>
 
 </resources>
