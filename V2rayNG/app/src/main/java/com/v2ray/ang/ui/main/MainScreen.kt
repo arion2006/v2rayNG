@@ -68,6 +68,7 @@ fun MainScreen(
     val sessionTraffic by mainViewModel.sessionTraffic.collectAsStateWithLifecycle()
     val speedHistory by mainViewModel.speedHistory.collectAsStateWithLifecycle()
     val dashboardStatus by mainViewModel.dashboardStatus.collectAsStateWithLifecycle()
+    val dashboardMode by mainViewModel.dashboardMode.collectAsStateWithLifecycle()
     val selectedServerRemarks by remember(selectedGuid) {
         mutableStateOf(mainViewModel.getSelectedServerRemarks())
     }
@@ -245,6 +246,7 @@ fun MainScreen(
                         sessionTraffic = sessionTraffic,
                         speedHistory = speedHistory,
                         dashboardStatus = dashboardStatus,
+                        dashboardMode = dashboardMode,
                         selectedServerRemarks = selectedServerRemarks,
                         onAction = onAction
                     )

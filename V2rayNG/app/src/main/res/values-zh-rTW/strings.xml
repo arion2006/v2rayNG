@@ -592,5 +592,10 @@
     <string name="dashboard_network_title">網路檢測</string>
     <string name="dashboard_network_action">測試</string>
     <string name="dashboard_network_hint">點擊測試，測量目前出站的延遲與出口 IP。</string>
+    <string name="dashboard_mode_title">模式</string>
+    <string name="dashboard_mode_vpn">VPN</string>
+    <string name="dashboard_mode_proxy">僅代理</string>
+    <string name="dashboard_mode_root">Root</string>
+    <string name="dashboard_mode_hint">可在設定中切換模式。</string>
 
 </resources>

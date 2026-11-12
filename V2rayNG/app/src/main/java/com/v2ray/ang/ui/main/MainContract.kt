@@ -41,6 +41,13 @@ data class SessionTraffic(
     val sessionDownBytes: Long
 )
 
+/** Running mode resolved from settings for the dashboard mode card (display only). */
+enum class DashboardMode {
+    VPN,
+    PROXY,
+    ROOT
+}
+
 /** Device/app status for the dashboard status card; null fields are hidden, never invented. */
 data class DashboardStatus(
     val lanIp: String? = null,

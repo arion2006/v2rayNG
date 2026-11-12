@@ -40,6 +40,7 @@ fun DashboardHomeTab(
     sessionTraffic: SessionTraffic?,
     speedHistory: List<SpeedSample>,
     dashboardStatus: DashboardStatus,
+    dashboardMode: DashboardMode,
     selectedServerRemarks: String?,
     onAction: (MainAction) -> Unit
 ) {
@@ -60,6 +61,38 @@ fun DashboardHomeTab(
         SpeedChartCard(sessionTraffic = sessionTraffic, speedHistory = speedHistory)
         StatusCard(dashboardStatus = dashboardStatus)
         NetworkTestCard(mainViewModel = mainViewModel, uiState = uiState, onAction = onAction)
+        ModeCard(dashboardMode = dashboardMode)
+    }
+}
+
+@Composable
+private fun ModeCard(dashboardMode: DashboardMode) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(id = R.string.dashboard_mode_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(
+                    id = when (dashboardMode) {
+                        DashboardMode.VPN -> R.string.dashboard_mode_vpn
+                        DashboardMode.PROXY -> R.string.dashboard_mode_proxy
+                        DashboardMode.ROOT -> R.string.dashboard_mode_root
+                    }
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(id = R.string.dashboard_mode_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

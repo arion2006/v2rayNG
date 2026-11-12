@@ -23,6 +23,7 @@ import com.v2ray.ang.extension.delay
 import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
+import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionInfoParser
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
@@ -110,6 +111,9 @@ class MainViewModel(
 
     /** Elapsed-realtime stamp of when the current core run was first observed running. */
     private var serviceStartedAtElapsedMs: Long? = null
+
+    private val _dashboardMode = MutableStateFlow(readDashboardMode())
+    val dashboardMode: StateFlow<DashboardMode> = _dashboardMode.asStateFlow()
 
     private var sessionTrafficJob: Job? = null
 
@@ -279,6 +283,7 @@ class MainViewModel(
                 lastProxyUplink = proxyUplink
                 lastProxyDownlink = proxyDownlink
 
+                _dashboardMode.value = readDashboardMode()
                 _dashboardStatus.update {
                     DashboardStatus(
                         lanIp = queryLanIp(),
@@ -306,11 +311,19 @@ class MainViewModel(
     // ---------- Dashboard status queries ----------
 
     private fun refreshStaticStatus() {
+        _dashboardMode.value = readDashboardMode()
         viewModelScope.launch(Dispatchers.IO) {
             _dashboardStatus.update {
                 it.copy(lanIp = queryLanIp(), appMemoryBytes = queryAppMemoryBytes())
             }
         }
+    }
+
+    /** Current running mode from settings; root mode wins over the VPN/proxy choice. */
+    private fun readDashboardMode(): DashboardMode = when {
+        SettingsManager.isRootMode() -> DashboardMode.ROOT
+        SettingsManager.isVpnMode() -> DashboardMode.VPN
+        else -> DashboardMode.PROXY
     }
 
     /** First non-loopback IPv4 on a LAN-class interface (wlan/rmnet/eth preferred, tun/ppp skipped). */
