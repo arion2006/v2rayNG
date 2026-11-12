@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -67,6 +69,8 @@ private fun applyTestDelayResultsToRows(
     }
 }
 
+private const val SESSION_TRAFFIC_POLL_INTERVAL_MS = 2_000L
+
 class MainViewModel(
     application: Application,
     private val dataSource: MainDataSource
@@ -86,6 +90,12 @@ class MainViewModel(
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    // ---------- Session traffic ----------
+    private val _sessionTraffic = MutableStateFlow<SessionTraffic?>(null)
+    val sessionTraffic: StateFlow<SessionTraffic?> = _sessionTraffic.asStateFlow()
+
+    private var sessionTrafficJob: Job? = null
 
     // ---------- Keyword filtering ----------
     @Volatile
@@ -128,11 +138,18 @@ class MainViewModel(
 
     private fun handleServiceEvent(event: MainServiceEvent) {
         when (event) {
-            MainServiceEvent.StateRunning -> updateRunningState(true, clearTestingText = false)
-            MainServiceEvent.StateNotRunning -> updateRunningState(false, clearTestingText = false)
+            MainServiceEvent.StateRunning -> {
+                updateRunningState(true, clearTestingText = false)
+                startSessionTrafficPolling()
+            }
+            MainServiceEvent.StateNotRunning -> {
+                updateRunningState(false, clearTestingText = false)
+                stopSessionTrafficPolling()
+            }
             MainServiceEvent.StateStartSuccess -> {
                 toastSuccess(R.string.toast_services_success)
                 updateRunningState(true)
+                startSessionTrafficPolling()
             }
 
             is MainServiceEvent.StateStartFailure -> {
@@ -144,7 +161,10 @@ class MainViewModel(
                 updateRunningState(false)
             }
 
-            MainServiceEvent.StateStopSuccess -> updateRunningState(false)
+            MainServiceEvent.StateStopSuccess -> {
+                updateRunningState(false)
+                stopSessionTrafficPolling()
+            }
             is MainServiceEvent.MeasureDelayResult -> {
                 if (!uiState.value.isRunning) return
                 _uiState.update { it.copy(isTesting = false, status = MainStatus.ConnectionTest(event.result)) }
@@ -183,6 +203,65 @@ class MainViewModel(
                 }
             }
         }
+    }
+
+    // ---------- Session traffic polling ----------
+
+    private fun startSessionTrafficPolling() {
+        sessionTrafficJob?.cancel()
+        sessionTrafficJob = viewModelScope.launch(Dispatchers.IO) {
+            var lastQueryTime = System.currentTimeMillis()
+            var lastProxyUplink: Long? = null
+            var lastProxyDownlink: Long? = null
+            var baselineProxyUplink = 0L
+            var baselineProxyDownlink = 0L
+
+            while (isActive) {
+                var proxyUplink = 0L
+                var proxyDownlink = 0L
+                CoreServiceManager.queryAllOutboundTrafficStats().forEach { stat ->
+                    if (stat.tag != AppConfig.TAG_DIRECT && stat.tag != AppConfig.TAG_BLOCKED) {
+                        when (stat.direction) {
+                            AppConfig.UPLINK -> proxyUplink += stat.value
+                            AppConfig.DOWNLINK -> proxyDownlink += stat.value
+                        }
+                    }
+                }
+
+                val queryTime = System.currentTimeMillis()
+                val sinceLastQueryInSeconds = ((queryTime - lastQueryTime) / 1000.0)
+                    .takeIf { it > 0.0 } ?: (SESSION_TRAFFIC_POLL_INTERVAL_MS / 1000.0)
+                lastQueryTime = queryTime
+
+                val prevProxyUplink = lastProxyUplink
+                val prevProxyDownlink = lastProxyDownlink
+                if (prevProxyUplink == null || prevProxyDownlink == null) {
+                    // First sample of this run: adopt it as the baseline, speed is not measurable yet.
+                    baselineProxyUplink = proxyUplink
+                    baselineProxyDownlink = proxyDownlink
+                    _sessionTraffic.update { SessionTraffic(0.0, 0.0, 0L, 0L) }
+                } else {
+                    _sessionTraffic.update {
+                        SessionTraffic(
+                            upSpeedBytesPerSec = (proxyUplink - prevProxyUplink) / sinceLastQueryInSeconds,
+                            downSpeedBytesPerSec = (proxyDownlink - prevProxyDownlink) / sinceLastQueryInSeconds,
+                            sessionUpBytes = proxyUplink - baselineProxyUplink,
+                            sessionDownBytes = proxyDownlink - baselineProxyDownlink
+                        )
+                    }
+                }
+                lastProxyUplink = proxyUplink
+                lastProxyDownlink = proxyDownlink
+
+                delay(SESSION_TRAFFIC_POLL_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun stopSessionTrafficPolling() {
+        sessionTrafficJob?.cancel()
+        sessionTrafficJob = null
+        _sessionTraffic.value = null
     }
 
     private fun queueTestResult(result: RealPingResult, request: MainTestRequests.Bulk) {
@@ -251,6 +330,10 @@ class MainViewModel(
     }
 
     // ---------- Public state accessors ----------
+    /** Remarks of the currently selected server, or null when none is selected. */
+    fun getSelectedServerRemarks(): String? =
+        uiState.value.selectedGuid?.let { dataSource.decodeServerConfig(it)?.remarks }
+
     fun serversForGroup(groupId: String): StateFlow<List<ServersCache>> =
         groupServerFlows.computeIfAbsent(groupId) {
             val groupState = mutableServerGroupState(groupId)

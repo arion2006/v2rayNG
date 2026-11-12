@@ -30,6 +30,18 @@ data class MainUiState(
 )
 
 /**
+ * Live session traffic sampled from the running core.
+ * Speeds are in bytes/sec; session totals are cumulative since the current run,
+ * with the first sample taken as the baseline.
+ */
+data class SessionTraffic(
+    val upSpeedBytesPerSec: Double,
+    val downSpeedBytesPerSec: Double,
+    val sessionUpBytes: Long,
+    val sessionDownBytes: Long
+)
+
+/**
  * All possible user interaction intents
  */
 sealed interface MainAction {

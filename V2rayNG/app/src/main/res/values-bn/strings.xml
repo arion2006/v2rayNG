@@ -577,5 +577,14 @@
     <string name="sub_info_open_support">সাপোর্ট লিঙ্ক খুলুন</string>
     <string name="sub_info_open_page">সাবস্ক্রিপশন তথ্যের পাতা খুলুন</string>
     <string name="sub_info_unlimited">সীমাহীন</string>
+    <string name="dashboard_tab_home">Home</string>
+    <string name="dashboard_tab_proxy">Proxy</string>
+    <string name="dashboard_tab_settings">Settings</string>
+    <string name="dashboard_connection_title">Connection</string>
+    <string name="dashboard_traffic_title">Session traffic</string>
+    <string name="dashboard_traffic_up">Up</string>
+    <string name="dashboard_traffic_down">Down</string>
+    <string name="dashboard_traffic_session_up">Session up</string>
+    <string name="dashboard_traffic_session_down">Session down</string>
 
 </resources>

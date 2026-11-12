@@ -575,5 +575,14 @@
     <string name="sub_info_open_support">打开支持链接</string>
     <string name="sub_info_open_page">打开订阅信息页面</string>
     <string name="sub_info_unlimited">无限制</string>
+    <string name="dashboard_tab_home">首页</string>
+    <string name="dashboard_tab_proxy">代理</string>
+    <string name="dashboard_tab_settings">设置</string>
+    <string name="dashboard_connection_title">连接</string>
+    <string name="dashboard_traffic_title">会话流量</string>
+    <string name="dashboard_traffic_up">上行</string>
+    <string name="dashboard_traffic_down">下行</string>
+    <string name="dashboard_traffic_session_up">会话上行</string>
+    <string name="dashboard_traffic_session_down">会话下行</string>
 
 </resources>
