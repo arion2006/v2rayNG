@@ -50,6 +50,13 @@ data class SpeedSample(
 /** Max samples kept for the dashboard speed chart (2 s poll interval, about 2 minutes). */
 const val SPEED_HISTORY_MAX_SAMPLES = 60
 
+/** Uplink share of the session traffic in [0, 1]; 0 when no traffic has flowed yet. */
+fun uplinkShare(sessionUpBytes: Long, sessionDownBytes: Long): Float {
+    val total = sessionUpBytes + sessionDownBytes
+    if (total <= 0L) return 0f
+    return (sessionUpBytes.toDouble() / total.toDouble()).toFloat().coerceIn(0f, 1f)
+}
+
 /** Append [sample] to [history], keeping only the newest [maxSamples] entries. */
 fun appendSpeedSample(
     history: List<SpeedSample>,

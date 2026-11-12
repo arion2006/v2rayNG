@@ -4,10 +4,13 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -15,7 +18,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -189,21 +195,83 @@ private fun SessionTrafficCard(sessionTraffic: SessionTraffic?) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                TrafficInfoLine(
-                    labelRes = R.string.dashboard_traffic_up,
-                    value = sessionTraffic.upSpeedBytesPerSec.toLong().toSpeedString()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TrafficRing(
+                        upShare = uplinkShare(sessionTraffic.sessionUpBytes, sessionTraffic.sessionDownBytes),
+                        hasTraffic = sessionTraffic.sessionUpBytes + sessionTraffic.sessionDownBytes > 0L,
+                        upColor = MaterialTheme.colorScheme.primary,
+                        downColor = MaterialTheme.colorScheme.tertiary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        TrafficInfoLine(
+                            labelRes = R.string.dashboard_traffic_up,
+                            value = sessionTraffic.upSpeedBytesPerSec.toLong().toSpeedString()
+                        )
+                        TrafficInfoLine(
+                            labelRes = R.string.dashboard_traffic_down,
+                            value = sessionTraffic.downSpeedBytesPerSec.toLong().toSpeedString()
+                        )
+                        TrafficInfoLine(
+                            labelRes = R.string.dashboard_traffic_session_up,
+                            value = sessionTraffic.sessionUpBytes.toTrafficString()
+                        )
+                        TrafficInfoLine(
+                            labelRes = R.string.dashboard_traffic_session_down,
+                            value = sessionTraffic.sessionDownBytes.toTrafficString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Session up/down share ring; the uplink arc starts at the top and runs clockwise. */
+@Composable
+private fun TrafficRing(
+    upShare: Float,
+    hasTraffic: Boolean,
+    upColor: Color,
+    downColor: Color,
+    trackColor: Color
+) {
+    Canvas(modifier = Modifier.size(96.dp)) {
+        val strokeWidth = 12.dp.toPx()
+        val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+        drawArc(
+            color = trackColor,
+            startAngle = 0f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = topLeft,
+            size = arcSize,
+            style = Stroke(width = strokeWidth)
+        )
+        if (hasTraffic) {
+            val upSweep = upShare * 360f
+            if (upSweep > 0f) {
+                drawArc(
+                    color = upColor,
+                    startAngle = -90f,
+                    sweepAngle = upSweep,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidth)
                 )
-                TrafficInfoLine(
-                    labelRes = R.string.dashboard_traffic_down,
-                    value = sessionTraffic.downSpeedBytesPerSec.toLong().toSpeedString()
-                )
-                TrafficInfoLine(
-                    labelRes = R.string.dashboard_traffic_session_up,
-                    value = sessionTraffic.sessionUpBytes.toTrafficString()
-                )
-                TrafficInfoLine(
-                    labelRes = R.string.dashboard_traffic_session_down,
-                    value = sessionTraffic.sessionDownBytes.toTrafficString()
+            }
+            if (upSweep < 360f) {
+                drawArc(
+                    color = downColor,
+                    startAngle = -90f + upSweep,
+                    sweepAngle = 360f - upSweep,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidth)
                 )
             }
         }
