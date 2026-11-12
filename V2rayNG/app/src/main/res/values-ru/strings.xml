@@ -595,5 +595,8 @@
     <string name="dashboard_status_lan_ip">LAN IP</string>
     <string name="dashboard_status_memory">App memory</string>
     <string name="dashboard_status_uptime">Core uptime</string>
+    <string name="dashboard_network_title">Network test</string>
+    <string name="dashboard_network_action">Test</string>
+    <string name="dashboard_network_hint">Tap Test to measure the delay and exit IP of the current outbound.</string>
 
 </resources>

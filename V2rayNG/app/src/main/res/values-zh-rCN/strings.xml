@@ -589,5 +589,8 @@
     <string name="dashboard_status_lan_ip">内网 IP</string>
     <string name="dashboard_status_memory">应用内存</string>
     <string name="dashboard_status_uptime">核心运行时间</string>
+    <string name="dashboard_network_title">网络检测</string>
+    <string name="dashboard_network_action">测试</string>
+    <string name="dashboard_network_hint">点击测试，测量当前出站的延迟与出口 IP。</string>
 
 </resources>

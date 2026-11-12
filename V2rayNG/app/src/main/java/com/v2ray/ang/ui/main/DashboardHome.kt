@@ -59,6 +59,55 @@ fun DashboardHomeTab(
         SessionTrafficCard(sessionTraffic = sessionTraffic)
         SpeedChartCard(sessionTraffic = sessionTraffic, speedHistory = speedHistory)
         StatusCard(dashboardStatus = dashboardStatus)
+        NetworkTestCard(mainViewModel = mainViewModel, uiState = uiState, onAction = onAction)
+    }
+}
+
+@Composable
+private fun NetworkTestCard(
+    mainViewModel: MainViewModel,
+    uiState: MainUiState,
+    onAction: (MainAction) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(id = R.string.dashboard_network_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            when (val status = uiState.status) {
+                is MainStatus.ConnectionTest -> Text(
+                    text = mainViewModel.formatStatus(status),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                MainStatus.Testing -> Text(
+                    text = stringResource(id = R.string.connection_test_testing),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                else -> Text(
+                    text = stringResource(id = R.string.dashboard_network_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            val actionLabel = stringResource(id = R.string.dashboard_network_action)
+            Button(
+                onClick = { onAction(MainAction.TestCurrentServer) },
+                enabled = uiState.isRunning && !uiState.isTesting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = actionLabel }
+            ) {
+                Text(text = actionLabel)
+            }
+        }
     }
 }
 
