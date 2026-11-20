@@ -1,11 +1,16 @@
 package com.v2ray.ang.ui.main
 
+import android.app.ActivityManager
 import android.app.Application
+import android.content.Context
+import android.os.Process
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
@@ -18,6 +23,8 @@ import com.v2ray.ang.extension.delay
 import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
+import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.SubscriptionInfoParser
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.CancellationException
@@ -35,10 +42,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.PatternSyntaxException
 
@@ -66,6 +76,8 @@ private fun applyTestDelayResultsToRows(
     }
 }
 
+private const val SESSION_TRAFFIC_POLL_INTERVAL_MS = 2_000L
+
 class MainViewModel(
     application: Application,
     private val dataSource: MainDataSource
@@ -85,6 +97,25 @@ class MainViewModel(
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    // ---------- Session traffic ----------
+    private val _sessionTraffic = MutableStateFlow<SessionTraffic?>(null)
+    val sessionTraffic: StateFlow<SessionTraffic?> = _sessionTraffic.asStateFlow()
+
+    private val _speedHistory = MutableStateFlow<List<SpeedSample>>(emptyList())
+    val speedHistory: StateFlow<List<SpeedSample>> = _speedHistory.asStateFlow()
+
+    // ---------- Dashboard status ----------
+    private val _dashboardStatus = MutableStateFlow(DashboardStatus())
+    val dashboardStatus: StateFlow<DashboardStatus> = _dashboardStatus.asStateFlow()
+
+    /** Elapsed-realtime stamp of when the current core run was first observed running. */
+    private var serviceStartedAtElapsedMs: Long? = null
+
+    private val _dashboardMode = MutableStateFlow(readDashboardMode())
+    val dashboardMode: StateFlow<DashboardMode> = _dashboardMode.asStateFlow()
+
+    private var sessionTrafficJob: Job? = null
 
     // ---------- Keyword filtering ----------
     @Volatile
@@ -115,6 +146,7 @@ class MainViewModel(
     init {
         collectServiceEvents()
         setupGroupTab()
+        refreshStaticStatus()
     }
 
     private fun collectServiceEvents() {
@@ -127,11 +159,18 @@ class MainViewModel(
 
     private fun handleServiceEvent(event: MainServiceEvent) {
         when (event) {
-            MainServiceEvent.StateRunning -> updateRunningState(true, clearTestingText = false)
-            MainServiceEvent.StateNotRunning -> updateRunningState(false, clearTestingText = false)
+            MainServiceEvent.StateRunning -> {
+                updateRunningState(true, clearTestingText = false)
+                startSessionTrafficPolling()
+            }
+            MainServiceEvent.StateNotRunning -> {
+                updateRunningState(false, clearTestingText = false)
+                stopSessionTrafficPolling()
+            }
             MainServiceEvent.StateStartSuccess -> {
                 toastSuccess(R.string.toast_services_success)
                 updateRunningState(true)
+                startSessionTrafficPolling()
             }
 
             is MainServiceEvent.StateStartFailure -> {
@@ -143,10 +182,13 @@ class MainViewModel(
                 updateRunningState(false)
             }
 
-            MainServiceEvent.StateStopSuccess -> updateRunningState(false)
+            MainServiceEvent.StateStopSuccess -> {
+                updateRunningState(false)
+                stopSessionTrafficPolling()
+            }
             is MainServiceEvent.MeasureDelayResult -> {
-                if (!uiState.value.isRunning || !testRequests.completeCurrent(event.requestId)) return
-                _uiState.update { it.copy(isTesting = testRequests.isTesting, status = MainStatus.ConnectionTest(event.result)) }
+                if (!uiState.value.isRunning) return
+                _uiState.update { it.copy(isTesting = false, status = MainStatus.ConnectionTest(event.result)) }
             }
 
             is MainServiceEvent.MeasureConfigSuccess -> {
@@ -172,7 +214,7 @@ class MainViewModel(
             }
 
             is MainServiceEvent.MeasureDelayCancelled -> {
-                if (testRequests.completeCurrent(event.requestId)) resetTestStatus()
+                //if (testRequests.completeCurrent(event.requestId)) resetTestStatus()
             }
 
             is MainServiceEvent.MeasureConfigCancelled -> {
@@ -181,6 +223,145 @@ class MainViewModel(
                     resetTestStatus()
                 }
             }
+        }
+    }
+
+    // ---------- Session traffic polling ----------
+
+    private fun startSessionTrafficPolling() {
+        sessionTrafficJob?.cancel()
+        if (serviceStartedAtElapsedMs == null) {
+            serviceStartedAtElapsedMs = SystemClock.elapsedRealtime()
+        }
+        sessionTrafficJob = viewModelScope.launch(Dispatchers.IO) {
+            var lastQueryTime = System.currentTimeMillis()
+            var lastProxyUplink: Long? = null
+            var lastProxyDownlink: Long? = null
+            var baselineProxyUplink = 0L
+            var baselineProxyDownlink = 0L
+
+            while (isActive) {
+                var proxyUplink = 0L
+                var proxyDownlink = 0L
+                CoreServiceManager.queryAllOutboundTrafficStats().forEach { stat ->
+                    if (stat.tag != AppConfig.TAG_DIRECT && stat.tag != AppConfig.TAG_BLOCKED) {
+                        when (stat.direction) {
+                            AppConfig.UPLINK -> proxyUplink += stat.value
+                            AppConfig.DOWNLINK -> proxyDownlink += stat.value
+                        }
+                    }
+                }
+
+                val queryTime = System.currentTimeMillis()
+                val sinceLastQueryInSeconds = ((queryTime - lastQueryTime) / 1000.0)
+                    .takeIf { it > 0.0 } ?: (SESSION_TRAFFIC_POLL_INTERVAL_MS / 1000.0)
+                lastQueryTime = queryTime
+
+                val prevProxyUplink = lastProxyUplink
+                val prevProxyDownlink = lastProxyDownlink
+                if (prevProxyUplink == null || prevProxyDownlink == null) {
+                    // First sample of this run: adopt it as the baseline, speed is not measurable yet.
+                    baselineProxyUplink = proxyUplink
+                    baselineProxyDownlink = proxyDownlink
+                    _sessionTraffic.update { SessionTraffic(0.0, 0.0, 0L, 0L) }
+                    _speedHistory.update { appendSpeedSample(it, SpeedSample(0.0, 0.0)) }
+                } else {
+                    val traffic = SessionTraffic(
+                        upSpeedBytesPerSec = (proxyUplink - prevProxyUplink) / sinceLastQueryInSeconds,
+                        downSpeedBytesPerSec = (proxyDownlink - prevProxyDownlink) / sinceLastQueryInSeconds,
+                        sessionUpBytes = proxyUplink - baselineProxyUplink,
+                        sessionDownBytes = proxyDownlink - baselineProxyDownlink
+                    )
+                    _sessionTraffic.update { traffic }
+                    _speedHistory.update {
+                        appendSpeedSample(
+                            it,
+                            SpeedSample(traffic.upSpeedBytesPerSec, traffic.downSpeedBytesPerSec)
+                        )
+                    }
+                }
+                lastProxyUplink = proxyUplink
+                lastProxyDownlink = proxyDownlink
+
+                _dashboardMode.value = readDashboardMode()
+                _dashboardStatus.update {
+                    DashboardStatus(
+                        lanIp = queryLanIp(),
+                        appMemoryBytes = queryAppMemoryBytes(),
+                        coreUptimeMillis = serviceStartedAtElapsedMs?.let { startedAt ->
+                            (SystemClock.elapsedRealtime() - startedAt).coerceAtLeast(0L)
+                        }
+                    )
+                }
+
+                delay(SESSION_TRAFFIC_POLL_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun stopSessionTrafficPolling() {
+        sessionTrafficJob?.cancel()
+        sessionTrafficJob = null
+        _sessionTraffic.value = null
+        _speedHistory.value = emptyList()
+        serviceStartedAtElapsedMs = null
+        _dashboardStatus.update { it.copy(coreUptimeMillis = null) }
+    }
+
+    // ---------- Dashboard status queries ----------
+
+    private fun refreshStaticStatus() {
+        _dashboardMode.value = readDashboardMode()
+        viewModelScope.launch(Dispatchers.IO) {
+            _dashboardStatus.update {
+                it.copy(lanIp = queryLanIp(), appMemoryBytes = queryAppMemoryBytes())
+            }
+        }
+    }
+
+    /** Current running mode from settings; root mode wins over the VPN/proxy choice. */
+    private fun readDashboardMode(): DashboardMode = when {
+        SettingsManager.isRootMode() -> DashboardMode.ROOT
+        SettingsManager.isVpnMode() -> DashboardMode.VPN
+        else -> DashboardMode.PROXY
+    }
+
+    /** First non-loopback IPv4 on a LAN-class interface (wlan/rmnet/eth preferred, tun/ppp skipped). */
+    private fun queryLanIp(): String? {
+        return try {
+            val addresses = NetworkInterface.getNetworkInterfaces()?.toList().orEmpty()
+                .filter { iface ->
+                    runCatching { iface.isUp && !iface.isLoopback }.getOrDefault(false)
+                }
+                .flatMap { iface ->
+                    iface.inetAddresses.toList().map { address -> iface.name to address }
+                }
+                .filter { (_, address) ->
+                    address is Inet4Address && !address.isLoopbackAddress && !address.isLinkLocalAddress
+                }
+            val preferred = addresses.firstOrNull { (name, _) ->
+                name.startsWith("wlan") || name.startsWith("rmnet") || name.startsWith("eth")
+            } ?: addresses.firstOrNull { (name, _) ->
+                !name.startsWith("tun") && !name.startsWith("ppp")
+            }
+            preferred?.second?.hostAddress
+        } catch (error: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to query LAN IP", error)
+            null
+        }
+    }
+
+    /** This process's total PSS in bytes, or null when the platform refuses to report it. */
+    private fun queryAppMemoryBytes(): Long? {
+        return try {
+            val activityManager =
+                app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return null
+            val info = activityManager.getProcessMemoryInfo(intArrayOf(Process.myPid()))
+                .firstOrNull() ?: return null
+            info.totalPss * 1024L
+        } catch (error: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to query app memory", error)
+            null
         }
     }
 
@@ -250,6 +431,10 @@ class MainViewModel(
     }
 
     // ---------- Public state accessors ----------
+    /** Remarks of the currently selected server, or null when none is selected. */
+    fun getSelectedServerRemarks(): String? =
+        uiState.value.selectedGuid?.let { dataSource.decodeServerConfig(it)?.remarks }
+
     fun serversForGroup(groupId: String): StateFlow<List<ServersCache>> =
         groupServerFlows.computeIfAbsent(groupId) {
             val groupState = mutableServerGroupState(groupId)
@@ -283,7 +468,8 @@ class MainViewModel(
             MainAction.RemoveDuplicateServers -> removeDuplicateServerAsync()
             MainAction.RemoveInvalidServers -> removeInvalidServerAsync()
             MainAction.SortByTestResults -> sortByTestResultsAsync()
-            MainAction.UpdateSubscriptions -> importConfigViaSub()
+            MainAction.UpdateSubscriptions -> importConfigViaSub(uiState.value.selectedGroupId)
+            is MainAction.UpdateGroupSubscription -> importConfigViaSub(action.groupId)
             MainAction.ExportAll -> exportAllAsync()
             is MainAction.SelectGroup -> subscriptionIdChanged(action.groupId)
             is MainAction.SelectServer -> updateSelectedGuid(action.guid)
@@ -310,7 +496,8 @@ class MainViewModel(
             MainAction.LocateSelectedServer,
             is MainAction.EditServer,
             is MainAction.ShareClipboard,
-            is MainAction.ShareFullContent -> {
+            is MainAction.ShareFullContent,
+            is MainAction.OpenSubscriptionLink -> {
                 // Handled by Activity via its onAction lambda
             }
         }
@@ -453,7 +640,13 @@ class MainViewModel(
                     cacheMutex.withLock { groupDataCache.clear() }
                 }
                 val groups = dataSource.getSubscriptions().map {
-                    GroupMapItem(id = it.guid, remarks = it.subscription.remarks)
+                    GroupMapItem(
+                        id = it.guid,
+                        remarks = it.subscription.remarks,
+                        usageInfo = it.subscription.usageInfo?.let { info ->
+                            SubscriptionInfoParser.withWebPageFallback(info, it.subscription.url)
+                        },
+                    )
                 }
                 val selectedGroup = resolveSelectedGroup(groups)
                 val validIds = groups.mapTo(HashSet()) { it.id }
@@ -532,8 +725,7 @@ class MainViewModel(
         }
     }
 
-    private fun importConfigViaSub() {
-        val subId = uiState.value.selectedGroupId
+    private fun importConfigViaSub(subId: String) {
         launchLoading {
             withContext(ioDispatcher) {
                 try {
@@ -885,9 +1077,8 @@ class MainViewModel(
 
     fun testCurrentServerRealPing() {
         if (!uiState.value.isRunning) return
-        val requestId = testRequests.beginCurrent()
         _uiState.update { it.copy(isTesting = true, status = MainStatus.Testing) }
-        dataSource.testCurrentServerRealPing(requestId)
+        dataSource.testCurrentServerRealPing("")
     }
 
     private fun onTestsFinished(requestId: String) {

@@ -15,8 +15,13 @@ enum class EConfigType(val value: Int, val protocolScheme: String) {
     HYSTERIA2(9, AppConfig.HYSTERIA2),
     HYSTERIA(900, AppConfig.HYSTERIA),
     HTTP(10, AppConfig.HTTP),
+    NAIVE(11, AppConfig.NAIVE),
+    // AiFly fork: NAIVE keeps 11 to preserve existing saved profiles;
+    // upstream 2.4.0 uses 11 for MASQUE, so MASQUE is 12 here (fork-local divergence).
+    MASQUE(12, AppConfig.MASQUE),
     POLICYGROUP(101, AppConfig.CUSTOM),
-    PROXYCHAIN(102, AppConfig.CUSTOM);
+    PROXYCHAIN(102, AppConfig.CUSTOM),
+    CUSTOM_OUTBOUND(103, AppConfig.CUSTOM);
 
     companion object {
         fun fromInt(value: Int) = entries.firstOrNull { it.value == value }

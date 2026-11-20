@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">AiFly</string>
     <string name="app_widget_name">آلشت</string>
     <string name="app_tile_name">آلشت</string>
     <string name="app_tile_first_use">سی کرت ٱولی و کار بوردن ای ویژیی، ٱول ز من برنومه ی سرور ازاف کۊنین</string>
@@ -43,8 +43,10 @@
     <string name="menu_item_import_config_manually_socks">ٱووردن [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">ٱووردن [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">ٱووردن [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">ٱووردن [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">ٱووردن [Hysteria2]</string>
+    <string name="menu_item_import_config_manually_masque">ٱووردن [MASQUE]</string>
     <string name="confirm_delete_visible_profiles">پوی کانفیگا ک هیم سکو نشووݩ داڌه ابۊن پاک ابۊن، هنی هم اخۊی پاکسووݩ کۊنی؟</string>
     <string name="confirm_delete_duplicate_profiles">پوی کانفیگا تکراری ک هیم سکو نشووݩ داڌه ابۊن پاک ابۊن، هنی هم اخۊی پاکسووݩ کۊنی؟</string>
     <string name="confirm_delete_invalid_profiles">ٱول کانفیگا ن آزمایش کۊنین. پوی کانفیگا نا موئتبر ک هیم سکو نشووݩ داڌه ابۊن پاک ابۊن، هنی هم اخۊی پاکسووݩ کۊنی؟</string>
@@ -73,6 +75,7 @@
     <string name="server_lab_request_host_h2">هاست h2</string>
     <string name="server_lab_request_host_quic">ٱمنیت QUIC</string>
     <string name="server_lab_request_host_grpc">Authority gRPC</string>
+    <string name="server_lab_request_host_masque">هاست MASQUE</string>
     <string name="server_lab_path">تور</string>
     <string name="server_lab_path_ws">تور WS</string>
     <string name="server_lab_path_httpupgrade">تور HTTPUpgrade</string>
@@ -81,6 +84,7 @@
     <string name="server_lab_path_quic">کیلیت QUIC</string>
     <string name="server_lab_path_kcp">KCP seed</string>
     <string name="server_lab_path_grpc">نوم سرویس gRPC</string>
+    <string name="server_lab_path_masque">تور MASQUE</string>
     <string name="server_lab_stream_security" translatable="false">TLS</string>
     <string name="server_lab_stream_fingerprint">جا کلک</string>
     <string name="server_lab_stream_alpn" translatable="false">ALPN</string>
@@ -91,6 +95,8 @@
     <string name="server_lab_id3">رزم</string>
     <string name="server_lab_security3">ٱمنیت</string>
     <string name="server_lab_id4">رزم (اختیاری)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">نوم منتوری (اختیاری)</string>
     <string name="server_lab_encryption">رزم نگاری</string>
     <string name="server_lab_flow">جریان (flow)</string>
@@ -102,8 +108,13 @@
     <string name="server_lab_secret_key">کیلیت سیخومی</string>
     <string name="server_lab_reserved">Reserved(اختیاری، وا کاما (,) ز یک جوڌا ابۊن)</string>
     <string name="server_lab_local_address">نشۊوی مهلی (اختیاری IPv4/IPv6، وا کاما (,) ز یک جوڌا ابۊن)</string>
+    <string name="server_lab_local_address_hint">اگه خالی بی، پؽش فرز %1$s سی و کار گرؽڌه وابی. نشۊویا IPv6 فقظ وختؽ کار گرؽڌه وابیڌه که IPv6 رۊشن بی.</string>
+    <string name="server_lab_masque_warp_settings">WARP</string>
+    <string name="server_lab_masque_warp_private_key">کیلیت سیخومی WARP</string>
+    <string name="server_lab_masque_warp_public_key">کیلیت پوی وولاتی WARP</string>
     <string name="server_lab_local_mtu">MTU(اختیاری، پؽش فرز 1420)</string>
     <string name="server_lab_remote_dns">remoteDNS (اختياری، نشۊویا IPv4/IPv6 جوڌا وابیڌه وا کاما، یا «local» سی و کار گرؽڌن DNS دسگا)</string>
+    <string name="server_lab_remote_dns_hint">اگه خالی بی، پؽش فرز %1$s سی و کار گرؽڌه وابی. نشۊویا IPv6 فقظ وختؽ کار گرؽڌه وابیڌه که IPv6 رۊشن بی.</string>
     <string name="server_lab_kcp_mtu">mKCP MTU (اختیاری، پؽش فرز 1350)</string>
     <string name="server_lab_kcp_tti">mKCP TTI (اختیاری، پؽش فرز 50 میلی‌سانیه)</string>
     <string name="toast_success">وا مووفقیت ٱنجوم وابی</string>
@@ -124,6 +135,9 @@
     <string name="server_lab_request_host6">هاست(SNI)(اختیاری)</string>
     <string name="toast_action_not_allowed">ای کار ممنۊع هڌ</string>
     <string name="server_obfs_password">رزم obfs</string>
+    <string name="server_obfs_type">نوع مبهم‌سازی</string>
+    <string name="server_lab_min_packet_size">حداقل اندازه بسته (اختیاری، پیش‌فرض 512)</string>
+    <string name="server_lab_max_packet_size">حداکثر اندازه بسته (اختیاری، پیش‌فرض 1200)</string>
     <string name="server_lab_port_hop">گوم پورت (پورت سرورن ز نۊ هؽل اکونه)</string>
     <string name="server_lab_port_hop_interval">فاسله گوم پورت (سانیه)</string>
     <string name="server_lab_bandwidth_down">ب لم ٱووڌن پئنا باند (واهڌ)</string>
@@ -560,5 +574,30 @@
     <string name="tasker_blurb_stop">واڌاشتن %1$s</string>
     <string name="connection_test_empty_message">دووسمندی نؽ</string>
     <string name="value_unknown">نا موشخس</string>
+    <string name="sub_info_open_support">واز کردن لینگ پشتیوانی</string>
+    <string name="sub_info_open_page">واز کردن صفحه اطلاعات اشتراک</string>
+    <string name="sub_info_unlimited">بی‌حد</string>
+    <string name="dashboard_tab_home">Home</string>
+    <string name="dashboard_tab_proxy">Proxy</string>
+    <string name="dashboard_tab_settings">Settings</string>
+    <string name="dashboard_connection_title">Connection</string>
+    <string name="dashboard_traffic_title">Session traffic</string>
+    <string name="dashboard_traffic_up">Up</string>
+    <string name="dashboard_traffic_down">Down</string>
+    <string name="dashboard_traffic_session_up">Session up</string>
+    <string name="dashboard_traffic_session_down">Session down</string>
+    <string name="dashboard_speed_title">Speed history</string>
+    <string name="dashboard_status_title">Status</string>
+    <string name="dashboard_status_lan_ip">LAN IP</string>
+    <string name="dashboard_status_memory">App memory</string>
+    <string name="dashboard_status_uptime">Core uptime</string>
+    <string name="dashboard_network_title">Network test</string>
+    <string name="dashboard_network_action">Test</string>
+    <string name="dashboard_network_hint">Tap Test to measure the delay and exit IP of the current outbound.</string>
+    <string name="dashboard_mode_title">Mode</string>
+    <string name="dashboard_mode_vpn">VPN</string>
+    <string name="dashboard_mode_proxy">Proxy only</string>
+    <string name="dashboard_mode_root">Root</string>
+    <string name="dashboard_mode_hint">You can switch the mode in Settings.</string>
 
 </resources>

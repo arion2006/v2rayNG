@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">AiFly</string>
     <string name="app_widget_name">التبديل</string>
     <string name="app_tile_name">التبديل</string>
     <string name="app_tile_first_use">أول استخدام لهذه الميزة، يرجى استخدام التطبيق لإضافة خادم</string>
@@ -43,8 +43,10 @@
     <string name="menu_item_import_config_manually_socks">إضافة [SOCKS]</string>
     <string name="menu_item_import_config_manually_http">إضافة [HTTP]</string>
     <string name="menu_item_import_config_manually_trojan">إضافة [Trojan]</string>
+    <string name="menu_item_import_config_manually_naive">Add [Naive]</string>
     <string name="menu_item_import_config_manually_wireguard">إضافة [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">إضافة [Hysteria2]</string>
+    <string name="menu_item_import_config_manually_masque">إضافة [MASQUE]</string>
     <string name="confirm_delete_visible_profiles">هل أنت متأكد من أنك تريد حذف جميع ملفات التعريف المعروضة حاليًا؟</string>
     <string name="confirm_delete_duplicate_profiles">هل أنت متأكد من أنك تريد حذف جميع ملفات التعريف المكررة المعروضة حاليًا؟</string>
     <string name="confirm_delete_invalid_profiles">يرجى اختبار ملفات التعريف أولًا. هل أنت متأكد من أنك تريد حذف جميع ملفات التعريف غير الصالحة المعروضة حاليًا؟</string>
@@ -73,6 +75,7 @@
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC security</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
+    <string name="server_lab_request_host_masque">MASQUE host</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
@@ -81,6 +84,7 @@
     <string name="server_lab_path_quic">QUIC key</string>
     <string name="server_lab_path_kcp">kcp seed</string>
     <string name="server_lab_path_grpc">gRPC serviceName</string>
+    <string name="server_lab_path_masque">MASQUE path</string>
     <string name="server_lab_stream_security" translatable="false">TLS</string>
     <string name="server_lab_stream_fingerprint">البصمة</string>
     <string name="server_lab_stream_alpn" translatable="false">ALPN</string>
@@ -91,6 +95,8 @@
     <string name="server_lab_id3">كلمة المرور</string>
     <string name="server_lab_security3">الأمان</string>
     <string name="server_lab_id4">كلمة المرور (اختياري)</string>
+    <string name="server_lab_naive_user">User</string>
+    <string name="server_lab_naive_password">Password</string>
     <string name="server_lab_security4">المستخدم (اختياري)</string>
     <string name="server_lab_encryption">التشفير</string>
     <string name="server_lab_flow">التدفق (flow)</string>
@@ -102,8 +108,13 @@
     <string name="server_lab_secret_key">المفتاح السري</string>
     <string name="server_lab_reserved">Reserved (اختياري، مفصول بفواصل)</string>
     <string name="server_lab_local_address">العنوان المحلي (اختياري IPv4/IPv6، مفصولة بفواصل)</string>
+    <string name="server_lab_local_address_hint">إذا كان فارغًا، فسيُستخدم %1$s افتراضيًا. لا تُستخدم عناوين IPv6 إلا عند تفعيل IPv6.</string>
+    <string name="server_lab_masque_warp_settings">WARP</string>
+    <string name="server_lab_masque_warp_private_key">المفتاح السري WARP</string>
+    <string name="server_lab_masque_warp_public_key">المفتاح العام WARP</string>
     <string name="server_lab_local_mtu">MTU (اختياري، الافتراضي 1420)</string>
     <string name="server_lab_remote_dns">remoteDNS (اختياري، عناوين IPv4/IPv6 مفصولة بفواصل)</string>
+    <string name="server_lab_remote_dns_hint">إذا كان فارغًا، فسيُستخدم %1$s افتراضيًا. لا تُستخدم عناوين IPv6 إلا عند تفعيل IPv6.</string>
     <string name="server_lab_kcp_mtu">mKCP MTU (اختياري، الافتراضي 1350)</string>
     <string name="server_lab_kcp_tti">mKCP TTI (اختياري، الافتراضي 50 مللي ثانية)</string>
     <string name="toast_success">نجاح</string>
@@ -124,6 +135,9 @@
     <string name="server_lab_request_host6">مضيف (SNI) (اختياري)</string>
     <string name="toast_action_not_allowed">الإجراء غير مسموح به</string>
     <string name="server_obfs_password">كلمة مرور Obfs</string>
+    <string name="server_obfs_type">نوع التمويه</string>
+    <string name="server_lab_min_packet_size">الحد الأدنى لحجم الحزمة (اختياري، الافتراضي 512)</string>
+    <string name="server_lab_max_packet_size">الحد الأقصى لحجم الحزمة (اختياري، الافتراضي 1200)</string>
     <string name="server_lab_port_hop">التنقل بين المنافذ (يتجاوز قيمة المنفذ)</string>
     <string name="server_lab_port_hop_interval">فاصل تبديل المنفذ (بالثواني)</string>
     <string name="server_lab_bandwidth_down">عرض النطاق للتنزيل (الوحدات المدعومة: k/m/g/t)</string>
@@ -568,5 +582,30 @@
     <string name="tasker_blurb_stop">إيقاف %1$s</string>
     <string name="connection_test_empty_message">لا تتوفر تفاصيل</string>
     <string name="value_unknown">غير معروف</string>
+    <string name="sub_info_open_support">فتح رابط الدعم</string>
+    <string name="sub_info_open_page">فتح صفحة معلومات الاشتراك</string>
+    <string name="sub_info_unlimited">غير محدود</string>
+    <string name="dashboard_tab_home">Home</string>
+    <string name="dashboard_tab_proxy">Proxy</string>
+    <string name="dashboard_tab_settings">Settings</string>
+    <string name="dashboard_connection_title">Connection</string>
+    <string name="dashboard_traffic_title">Session traffic</string>
+    <string name="dashboard_traffic_up">Up</string>
+    <string name="dashboard_traffic_down">Down</string>
+    <string name="dashboard_traffic_session_up">Session up</string>
+    <string name="dashboard_traffic_session_down">Session down</string>
+    <string name="dashboard_speed_title">Speed history</string>
+    <string name="dashboard_status_title">Status</string>
+    <string name="dashboard_status_lan_ip">LAN IP</string>
+    <string name="dashboard_status_memory">App memory</string>
+    <string name="dashboard_status_uptime">Core uptime</string>
+    <string name="dashboard_network_title">Network test</string>
+    <string name="dashboard_network_action">Test</string>
+    <string name="dashboard_network_hint">Tap Test to measure the delay and exit IP of the current outbound.</string>
+    <string name="dashboard_mode_title">Mode</string>
+    <string name="dashboard_mode_vpn">VPN</string>
+    <string name="dashboard_mode_proxy">Proxy only</string>
+    <string name="dashboard_mode_root">Root</string>
+    <string name="dashboard_mode_hint">You can switch the mode in Settings.</string>
 
 </resources>

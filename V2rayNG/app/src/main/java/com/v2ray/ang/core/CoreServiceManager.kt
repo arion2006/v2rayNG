@@ -18,6 +18,7 @@ import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.OutboundTrafficStat
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.BrowserDialerMode
+import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.delay
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
@@ -130,6 +131,12 @@ object CoreServiceManager {
         val guid = MmkvManager.getSelectServer() ?: error("No server selected")
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 
+        // Naive servers need their local proxy process up before the Xray config is built,
+        // because the generated socks outbound points at its dynamic port.
+        if (config.configType == EConfigType.NAIVE) {
+            NaiveProcessManager.start(config, service)
+        }
+
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting core loop for ${config.remarks}")
         val result = CoreConfigManager.getV2rayConfig(service, guid)
         LogUtil.d(AppConfig.TAG, result.content)
@@ -213,6 +220,9 @@ object CoreServiceManager {
             browserDialer!!.stop()
             browserDialer = null
         }
+
+        // Stop the naive local proxy after the core is down (it was started in launchCore).
+        NaiveProcessManager.stop()
 
         MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
         NotificationManager.cancelNotification()
@@ -345,18 +355,36 @@ object CoreServiceManager {
             }
 
             ensureActive()
-            val endpoint = if (time >= 0) SpeedtestManager.getRemoteIPInfo() else null
-            val result = ConnectionTestResult(
+            val initialResult = ConnectionTestResult(
                 delayMillis = time,
                 errorMessage = errorStr,
-                country = endpoint?.country,
-                ipAddress = endpoint?.ipAddress,
+                country = null,
+                ipAddress = null,
             )
             withContext(Dispatchers.Main.immediate) {
                 if (isRunning()) {
-                    MessageHelper.sendMsg2UI(service, AppConfig.MSG_MEASURE_DELAY_RESULT, result, requestId)
+                    MessageHelper.sendMsg2UI(service, AppConfig.MSG_MEASURE_DELAY_RESULT, initialResult, requestId)
                 } else {
                     MessageHelper.sendMsg2UI(service, AppConfig.MSG_MEASURE_DELAY_CANCEL, "", requestId)
+                    return@withContext
+                }
+            }
+
+            if (time >= 0) {
+                val endpoint = SpeedtestManager.getRemoteIPInfo()
+                if (endpoint != null && (endpoint.country != null || endpoint.ipAddress != null)) {
+                    ensureActive()
+                    val fullResult = ConnectionTestResult(
+                        delayMillis = time,
+                        errorMessage = errorStr,
+                        country = endpoint.country,
+                        ipAddress = endpoint.ipAddress,
+                    )
+                    withContext(Dispatchers.Main.immediate) {
+                        if (isRunning()) {
+                            MessageHelper.sendMsg2UI(service, AppConfig.MSG_MEASURE_DELAY_RESULT, fullResult, requestId)
+                        }
+                    }
                 }
             }
         }.invokeOnCompletion { cause ->
